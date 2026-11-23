@@ -78,13 +78,15 @@ final class ImageDisplayTests: XCTestCase {
     }
 
     @MainActor
-    func testImageDisplayPreferenceIsOptInAndOlderSnapshotsStillLoad() throws {
+    func testImageDisplayPreferenceIsSavedByDefaultCanBeOptedOutAndOlderSnapshotsStillLoad() throws {
         let suite = "ArgenticImageDisplay.\(UUID())"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let model = FractalModel(defaults: defaults)
         let other: ImageDisplayMode = ImageDisplayMode.platformDefault == .actualPixels ? .fitToWindow : .actualPixels
         model.imageDisplayMode = other
+        XCTAssertEqual(FractalModel(defaults: defaults).imageDisplayMode, other)
+        model.savedSettingGroups.remove(.display)
         XCTAssertEqual(FractalModel(defaults: defaults).imageDisplayMode, .platformDefault)
         model.savedSettingGroups = [.display]
         XCTAssertEqual(FractalModel(defaults: defaults).imageDisplayMode, other)

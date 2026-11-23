@@ -174,6 +174,11 @@ struct RenderMenuContent: View {
             }
         }
         Menu(groupTitle("Lyapunov", range: 1...20, selected: model.parameters.formula - 100)) {
+            Button("Clear") {
+                model.clearLyapunovSettings()
+            }
+            .disabled(!model.isLyapunovEnabled)
+            Divider()
             Menu(groupTitle("Map", range: 1...20, selected: model.parameters.formula - 100)) {
                 ForEach(Catalog.lyapunovMaps) { entry in
                     MenuChoice(title: numbered(entry), selected: model.parameters.formula == 100 + entry.id) {
@@ -181,20 +186,22 @@ struct RenderMenuContent: View {
                     }
                 }
             }
-            Menu("Derivative — \(model.parameters.lyapunovDerivative)") {
+            Menu(model.isLyapunovEnabled ? "Derivative — \(model.parameters.lyapunovDerivative)" : "Derivative") {
                 ForEach(Catalog.lyapunovDerivatives) { entry in
-                    MenuChoice(title: numbered(entry), selected: model.parameters.lyapunovDerivative == entry.id) {
+                    MenuChoice(title: numbered(entry), selected: model.isLyapunovEnabled && model.parameters.lyapunovDerivative == entry.id) {
                         model.chooseLyapunovDerivative(entry.id)
                     }
                 }
             }
-            Menu("Mapping — \(model.parameters.lyapunovMapping)") {
+            .disabled(!model.isLyapunovEnabled)
+            Menu(model.isLyapunovEnabled ? "Mapping — \(model.parameters.lyapunovMapping)" : "Mapping") {
                 ForEach(Catalog.lyapunovMappings) { entry in
-                    MenuChoice(title: numbered(entry), selected: model.parameters.lyapunovMapping == entry.id) {
+                    MenuChoice(title: numbered(entry), selected: model.isLyapunovEnabled && model.parameters.lyapunovMapping == entry.id) {
                         model.chooseLyapunovMapping(entry.id)
                     }
                 }
             }
+            .disabled(!model.isLyapunovEnabled)
         }
     }
 }
@@ -233,14 +240,14 @@ struct DialogsMenuContent: View {
     var model: FractalModel
 
     var body: some View {
-        Button("Saved Settings…") { model.showingSavedSettings = true }
-        Divider()
         ForEach(InspectorTab.allCases) { tab in
             Button(tab.rawValue) {
                 model.inspectorTab = tab
                 model.showInspector = true
             }
         }
+        Divider()
+        Button("Saved Settings…") { model.showingSavedSettings = true }
     }
 }
 

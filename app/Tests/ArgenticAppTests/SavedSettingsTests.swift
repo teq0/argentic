@@ -11,6 +11,41 @@ final class SavedSettingsTests: XCTestCase {
         try body(defaults)
     }
 
+    @MainActor
+    func testRestoredLyapunovSettingsCanBeTurnedOffAndStayOff() async throws {
+        let suite = "ArgenticLyapunovSettingsTests.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let model = FractalModel(defaults: defaults)
+        model.savedSettingGroups = [.fractal, .size]
+        model.parameters.width = 16
+        model.parameters.height = 12
+        model.parameters.maxIterations = 4
+        model.parameters.formula = 112
+        model.parameters.render = 32
+        model.parameters.lyapunovDerivative = 3
+        model.parameters.lyapunovMapping = 2
+
+        let restored = FractalModel(defaults: defaults)
+        XCTAssertTrue(restored.isLyapunovEnabled)
+        let active = restored.parameters
+        restored.setLyapunovEnabled(false)
+        let deadline = Date().addingTimeInterval(30)
+        while restored.isRendering && Date() < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        XCTAssertFalse(restored.isRendering)
+        XCTAssertFalse(restored.isLyapunovEnabled)
+        XCTAssertTrue(FractalImage.isFormulaAvailable(restored.parameters.formula))
+        XCTAssertTrue((1...29).contains(restored.parameters.render))
+        XCTAssertEqual(restored.parameters.viewport, active.viewport)
+        XCTAssertEqual(restored.parameters.lyapunovDerivative, 3)
+        XCTAssertEqual(restored.parameters.lyapunovMapping, 2)
+        let reopened = FractalModel(defaults: defaults)
+        XCTAssertFalse(reopened.isLyapunovEnabled)
+        XCTAssertEqual(reopened.parameters, restored.parameters)
+    }
+
     private var customParameters: FractalParameters {
         // Start from app defaults, including metadata carried by the current startup example.
         var p = ExampleCatalog.startupParameters
@@ -143,7 +178,7 @@ final class SavedSettingsTests: XCTestCase {
         try withDefaults { defaults in
             defaults.set("keepPosition", forKey: "clickZoomBehavior")
             let model = FractalModel(defaults: defaults)
-            XCTAssertEqual(model.savedSettingGroups, [.zoom])
+            XCTAssertEqual(model.savedSettingGroups, [.zoom, .inspector, .display, .export])
             XCTAssertEqual(model.clickZoomBehavior, .keepPosition)
             model.parameters = customParameters
             model.saveSettings()
@@ -153,6 +188,41 @@ final class SavedSettingsTests: XCTestCase {
             XCTAssertEqual(restored.clickZoomBehavior, .keepPosition)
             XCTAssertEqual(restored.smallZoomStep, .one)
             XCTAssertEqual(restored.parameters, ExampleCatalog.startupParameters)
+        }
+    }
+
+    @MainActor
+    func testFirstRunDefaultsRememberInspectorDisplayAndExport() throws {
+        try withDefaults { defaults in
+            let model = FractalModel(defaults: defaults)
+            XCTAssertEqual(model.savedSettingGroups, [.zoom, .inspector, .display, .export])
+            model.showInspector = true
+            model.inspectorTab = .fractal
+            model.imageDisplayMode = ImageDisplayMode.platformDefault == .fitToWindow ? .actualPixels : .fitToWindow
+            model.imageFormat = .jpeg
+
+            let restored = FractalModel(defaults: defaults)
+            XCTAssertEqual(restored.savedSettingGroups, model.savedSettingGroups)
+            XCTAssertTrue(restored.showInspector)
+            XCTAssertEqual(restored.inspectorTab, .fractal)
+            XCTAssertEqual(restored.imageDisplayMode, model.imageDisplayMode)
+            XCTAssertEqual(restored.imageFormat, .jpeg)
+        }
+    }
+
+    @MainActor
+    func testExistingSavedGroupSelectionIsNotExpandedByNewDefaults() throws {
+        try withDefaults { defaults in
+            defaults.set(["zoom"], forKey: "savedSettingGroups")
+            let model = FractalModel(defaults: defaults)
+            XCTAssertEqual(model.savedSettingGroups, [.zoom])
+            model.showInspector = true
+            model.imageFormat = .jpeg
+
+            let restored = FractalModel(defaults: defaults)
+            XCTAssertEqual(restored.savedSettingGroups, [.zoom])
+            XCTAssertFalse(restored.showInspector)
+            XCTAssertEqual(restored.imageFormat, .png)
         }
     }
 

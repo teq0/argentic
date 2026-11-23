@@ -32,7 +32,7 @@ On macOS, use the scroll bars, mouse wheel or trackpad to explore an oversized i
 
 Switching display mode does not render again, change output resolution or complex-plane bounds, or clear Back history. Scrolling moves only the displayed picture, not the fractal coordinates. Existing click and rectangle zoom tools continue to use image-pixel coordinates in either display mode. This setting is separate from the renderer's complex-plane aspect fitting.
 
-Enable **Image Display** in Saved Settings to remember the mode between launches. Otherwise the platform default is used. Display mode and scroll position are not stored in exported fractal settings; scroll position is not restored on launch.
+**Image Display** in Saved Settings remembers the mode between launches and is enabled by default on first run. When unchecked, the platform default is used. Display mode and scroll position are not stored in exported fractal settings; scroll position is not restored on launch.
 
 ## Bundled examples and the starting image
 
@@ -144,6 +144,10 @@ The Render method is different from the **Render** scale slider in the Colour pa
 ### Lyapunov
 
 **Render → Lyapunov** provides 20 maps, 21 derivative variants and 9 coordinate mappings. Maps use formulas 101–120. Selecting a map chooses render 30 if the current render is not already 30–32. The Fractal panel also exposes map, derivative and mapping controls.
+
+Choose **Render → Lyapunov → Clear**, or **Clear Lyapunov Settings** in the Fractal panel, to return to ordinary rendering and reset the Lyapunov choices. Clear is a command, not a checked mode, and is enabled only while a Lyapunov map or render is active. It restores the last non-Lyapunov formula and render used in this session (built-in defaults if none have been used), resets derivative and mapping to their defaults and forgets the previous map. Coordinates, colours, image size and anti-aliasing do not change. Any ordinary formula or render chosen while Lyapunov was active is kept. Inactive Lyapunov menu options have no checkmarks or selected numbers.
+
+The Fractal panel's **Enable Lyapunov** switch can temporarily disable Lyapunov without resetting its choices; enabling it again recalls the last map, retaining derivative and mapping settings. The panel's map, derivative and mapping controls are inactive while disabled. Selecting a map in the menu also enables Lyapunov. The resulting formula/render choices are remembered when **Fractal and Render** is enabled in Saved Settings; no new parameter-file fields are required.
 
 ### Transform and coordinate flags
 
@@ -265,7 +269,7 @@ Choose **Dialogs → Saved Settings…**, or **Argentic → Settings…** on mac
 - **Export Format**: the last chosen image export format.
 - **Full-Screen State** (macOS only): the main fractal window's native full-screen/windowed state. Enable this to restore it on the next launch; it is not selected by default.
 
-Only Zoom Controls are remembered by default. Unchecked groups use built-in defaults at the next launch; unchecking a group does not change the current image or controls. Selected settings are checkpointed as they change and when the app closes or enters the background, including on iOS where an exit notification is not guaranteed.
+On first run, Zoom Controls, Inspector, Image Display and Export Format are remembered by default. Existing saved group selections are preserved. Unchecked groups use built-in defaults at the next launch; unchecking a group does not change the current image or controls. Selected settings are checkpointed as they change and when the app closes or enters the background, including on iOS where an exit notification is not guaranteed.
 
 Images, Back history, rectangle selections and open export/import dialogs are not restored. The main view draws a new picture from the restored parameters. Save a picture or parameter file to keep a particular fractal independently of startup defaults.
 
@@ -288,7 +292,7 @@ On macOS, use the default **View → Enter/Exit Full Screen** command or the gre
 - Open **Dialogs → Saved Settings…** or **Argentic → Settings…**.
 - Enable **Full-Screen State**, then choose **Save**. This option is off by default.
 - Enter or exit full screen using either native control. When you quit, Argentic captures the main fractal window's state before macOS tears down its full-screen presentation.
-- On the next launch, the app restores that state once the main window is visible and ready. Full screen may therefore appear after the window first opens, rather than immediately. The saved preference is retained until macOS confirms that the full-screen transition has finished; the initial windowed frame does not count as choosing windowed mode.
+- On the next launch, the app restores that state after the main window is visible, key and has had a short settling period. Full screen may therefore appear after the window first opens, rather than immediately. If macOS ignores the initial request, the app retries up to three times. The saved preference is retained while restoration is pending or unsuccessful; the initial windowed frame does not count as choosing windowed mode.
 
 If Full-Screen State is unchecked, the next launch starts windowed, even if you quit from full screen. Unchecking it does not take the current window out of full screen. This preference concerns the main fractal window, not the separate Help window, and does not restore the previous image or Back history.
 

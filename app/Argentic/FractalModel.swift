@@ -63,7 +63,29 @@ enum InspectorTab: String, CaseIterable, Identifiable, Codable {
 @MainActor
 @Observable
 final class FractalModel {
-    var parameters = ExampleCatalog.startupParameters { didSet { saveSettings() } }
+    var parameters = ExampleCatalog.startupParameters {
+        didSet {
+            // Remember ordinary choices even when a file or saved settings enters Lyapunov mode.
+            if (1...20).contains(oldValue.formula - 100) {
+                lastLyapunovMap = oldValue.formula - 100
+            } else if FractalImage.isFormulaAvailable(oldValue.formula) {
+                lastNonLyapunovFormula = oldValue.formula
+            }
+            if (1...29).contains(oldValue.render) { lastNonLyapunovRender = oldValue.render }
+            saveSettings()
+        }
+    }
+    private var lastNonLyapunovFormula = FractalParameters().formula
+    private var lastNonLyapunovRender = FractalParameters().render
+    private var lastLyapunovMap = 1
+
+    var isLyapunovEnabled: Bool {
+        (101...120).contains(parameters.formula) || (30...32).contains(parameters.render)
+    }
+
+    var selectedLyapunovMap: Int {
+        (101...120).contains(parameters.formula) ? parameters.formula - 100 : lastLyapunovMap
+    }
     var renderingBackend: RenderingBackend = .metal { didSet { saveSettings() } }
     var image: CGImage?
     var isRendering = false
@@ -97,7 +119,7 @@ final class FractalModel {
     var inspectorTab: InspectorTab = .color { didSet { saveSettings() } }
     var showingSavedSettings = false
     var showingHelp = false
-    var savedSettingGroups: Set<SavedSettingGroup> = [.zoom] { didSet { saveSettings() } }
+    var savedSettingGroups: Set<SavedSettingGroup> = [.zoom, .inspector, .display, .export] { didSet { saveSettings() } }
     var showingImageExporter = false
     var imageFormat: ImageFormat = .png { didSet { saveSettings() } }
     var imageExportData = Data()
@@ -362,8 +384,37 @@ final class FractalModel {
 
     /// Lyapunov maps are formulas 101...120 and only make sense with renders 30...32, so the render follows.
     func chooseLyapunovMap(_ id: Int) {
-        parameters.formula = 100 + id
-        if !(30...32).contains(parameters.render) { parameters.render = 30 }
+        guard Catalog.lyapunovMaps.contains(where: { $0.id == id }) else { return }
+        var p = parameters
+        p.formula = 100 + id
+        if !(30...32).contains(p.render) { p.render = 30 }
+        parameters = p
+        draw()
+    }
+
+    func setLyapunovEnabled(_ enabled: Bool) {
+        guard enabled != isLyapunovEnabled else { return }
+        if enabled {
+            chooseLyapunovMap(selectedLyapunovMap)
+            return
+        }
+        // Only replace Lyapunov components; preserve any ordinary choice made in the meantime.
+        var p = parameters
+        if (101...120).contains(p.formula) { p.formula = lastNonLyapunovFormula }
+        if (30...32).contains(p.render) { p.render = lastNonLyapunovRender }
+        parameters = p
+        draw()
+    }
+
+    func clearLyapunovSettings() {
+        guard isLyapunovEnabled else { return }
+        var p = parameters
+        if (101...120).contains(p.formula) { p.formula = lastNonLyapunovFormula }
+        if (30...32).contains(p.render) { p.render = lastNonLyapunovRender }
+        p.lyapunovDerivative = FractalParameters().lyapunovDerivative
+        p.lyapunovMapping = FractalParameters().lyapunovMapping
+        parameters = p
+        lastLyapunovMap = 1
         draw()
     }
 

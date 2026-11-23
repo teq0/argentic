@@ -3,7 +3,7 @@ import Foundation
 import SwiftUI
 
 enum SavedSettingGroup: String, CaseIterable, Identifiable, Codable {
-    case zoom, rendering, fractal, colour, size, coordinates, inspector, display, export, fullScreen
+    case zoom, inspector, display, export, fullScreen,rendering, fractal, colour, size, coordinates
 
     static var availableGroups: [Self] {
         #if os(macOS)
@@ -32,15 +32,15 @@ enum SavedSettingGroup: String, CaseIterable, Identifiable, Codable {
     var detail: String {
         switch self {
         case .zoom: return "Click behaviour, zoom mode, click-zoom direction and small zoom step."
+        case .inspector: return "Visibility and selected panel."
+        case .display: return "Fit to Window or Actual Pixels (100%) display mode."
+        case .export: return "Last image export format."
+        case .fullScreen: return "Remember the main fractal window's full-screen/windowed state on quit (macOS)."
         case .rendering: return "Use Metal GPU rendering or double-precision CPU rendering."
         case .fractal: return "Formula, render, iterations, Julia settings, transforms and mapping."
         case .colour: return "Blend, RGB order, render scale and colour mixing controls."
         case .size: return "Width, height and anti-aliasing factor."
         case .coordinates: return "Current complex-plane bounds and aspect fitting."
-        case .inspector: return "Visibility and selected panel."
-        case .display: return "Fit to Window or Actual Pixels (100%) display mode."
-        case .export: return "Last image export format."
-        case .fullScreen: return "Remember the main fractal window's full-screen/windowed state on quit (macOS)."
         }
     }
 }

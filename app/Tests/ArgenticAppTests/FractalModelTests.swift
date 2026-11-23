@@ -26,6 +26,125 @@ final class FractalModelTests: XCTestCase {
     }
 
     @MainActor
+    func testLyapunovOffRestoresOrdinaryChoicesWithoutChangingOtherSettings() async throws {
+        let model = try await renderedModel()
+        model.parameters.formula = classicMandelbrotFormulaID
+        model.parameters.render = 6
+        model.parameters.lyapunovDerivative = 3
+        model.parameters.lyapunovMapping = 2
+        model.parameters.antiAlias = 2
+        model.parameters.colors.offset = [3, 7, 11]
+        let original = model.parameters
+        XCTAssertFalse(model.isLyapunovEnabled)
+
+        model.chooseLyapunovMap(4)
+        try await waitForRender(model)
+        XCTAssertTrue(model.isLyapunovEnabled)
+        XCTAssertEqual(model.parameters.formula, 104)
+        XCTAssertEqual(model.parameters.render, 30)
+        model.chooseLyapunovMap(8)
+        try await waitForRender(model)
+        model.chooseRender(32)
+        try await waitForRender(model)
+        model.setLyapunovEnabled(false)
+        try await waitForRender(model)
+        XCTAssertFalse(model.isLyapunovEnabled)
+        XCTAssertEqual(model.parameters, original)
+
+        model.setLyapunovEnabled(true)
+        try await waitForRender(model)
+        XCTAssertEqual(model.parameters.formula, 108, "Re-enabling remembers the last map")
+        XCTAssertEqual(model.parameters.render, 30)
+        XCTAssertEqual(model.parameters.lyapunovDerivative, 3)
+        XCTAssertEqual(model.parameters.lyapunovMapping, 2)
+        model.setLyapunovEnabled(false)
+        try await waitForRender(model)
+        XCTAssertEqual(model.parameters, original)
+        model.setLyapunovEnabled(false)
+        XCTAssertEqual(model.parameters, original, "Off is harmless when already off")
+    }
+
+    @MainActor
+    func testLyapunovOffHandlesImportedAndMixedFormulaRenderChoices() async throws {
+        let model = try await renderedModel()
+        model.parameters.formula = 18
+        model.parameters.render = 6
+        let ordinary = model.parameters
+        var imported = ordinary
+        imported.formula = 120
+        imported.render = 31
+        model.parameters = imported
+        model.setLyapunovEnabled(false)
+        try await waitForRender(model)
+        XCTAssertEqual(model.parameters, ordinary)
+
+        // A Lyapunov render alone also needs to be switchable off.
+        model.chooseRender(31)
+        try await waitForRender(model)
+        XCTAssertTrue(model.isLyapunovEnabled)
+        model.setLyapunovEnabled(false)
+        try await waitForRender(model)
+        XCTAssertEqual(model.parameters, ordinary)
+
+        model.chooseLyapunovMap(2)
+        try await waitForRender(model)
+        model.chooseRender(7)
+        try await waitForRender(model)
+        model.setLyapunovEnabled(false)
+        try await waitForRender(model)
+        XCTAssertEqual(model.parameters.formula, 18)
+        XCTAssertEqual(model.parameters.render, 7, "Keep an explicitly selected ordinary render")
+
+        model.chooseLyapunovMap(3)
+        try await waitForRender(model)
+        model.chooseFormula(1)
+        try await waitForRender(model)
+        model.setLyapunovEnabled(false)
+        try await waitForRender(model)
+        XCTAssertEqual(model.parameters.formula, 1, "Keep an explicitly selected ordinary formula")
+        XCTAssertEqual(model.parameters.render, 7)
+    }
+
+    @MainActor
+    func testClearLyapunovResetsChoicesAndIsHarmlessWhenInactive() async throws {
+        let model = try await renderedModel()
+        model.parameters.formula = 18
+        model.parameters.render = 6
+        let original = model.parameters
+        model.clearLyapunovSettings()
+        XCTAssertEqual(model.parameters, original)
+        XCTAssertFalse(model.isRendering)
+
+        model.chooseLyapunovMap(8)
+        try await waitForRender(model)
+        model.parameters.lyapunovDerivative = 3
+        model.parameters.lyapunovMapping = 2
+        model.clearLyapunovSettings()
+        try await waitForRender(model)
+        var expected = original
+        expected.lyapunovDerivative = FractalParameters().lyapunovDerivative
+        expected.lyapunovMapping = FractalParameters().lyapunovMapping
+        XCTAssertEqual(model.parameters, expected)
+        XCTAssertFalse(model.isLyapunovEnabled)
+        model.clearLyapunovSettings()
+        XCTAssertFalse(model.isRendering)
+        model.setLyapunovEnabled(true)
+        try await waitForRender(model)
+        XCTAssertEqual(model.parameters.formula, 101, "Clear forgets the previous map")
+        XCTAssertEqual(model.parameters.lyapunovDerivative, expected.lyapunovDerivative)
+        XCTAssertEqual(model.parameters.lyapunovMapping, expected.lyapunovMapping)
+    }
+
+    @MainActor
+    func testLyapunovMapRejectsInvalidIDs() {
+        let model = FractalModel(defaults: nil)
+        let original = model.parameters
+        for id in [0, -1, 21, 100] { model.chooseLyapunovMap(id) }
+        XCTAssertEqual(model.parameters, original)
+        XCTAssertFalse(model.isRendering)
+    }
+
+    @MainActor
     func testClickZoomBackRestoresExactViewsInOrder() async throws {
         let model = try await renderedModel()
         model.parameters.viewport.xMin = -2.123456789012345

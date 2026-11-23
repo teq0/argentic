@@ -94,6 +94,7 @@ final class FullScreenWindowTests: XCTestCase {
         XCTAssertEqual(window.toggleCount, 1)
         XCTAssertFalse(window.isRestorable)
         XCTAssertEqual(window.tabbingMode, .disallowed)
+        XCTAssertTrue(window.collectionBehavior.contains(.fullScreenPrimary))
         window.fullScreenForTesting = true
         NotificationCenter.default.post(name: NSWindow.didEnterFullScreenNotification, object: window)
         NotificationCenter.default.post(name: NSWindow.willExitFullScreenNotification, object: window)
@@ -247,6 +248,105 @@ final class FullScreenWindowTests: XCTestCase {
         NotificationCenter.default.post(name: NSWindow.didEnterFullScreenNotification, object: window)
         model.saveSettings()
         XCTAssertTrue(FractalModel(defaults: defaults).isFullScreen)
+    }
+
+    @MainActor
+    func testRestorationRetriesAnIgnoredNativeRequestWithoutLosingSavedState() async throws {
+        let suite = "ArgenticRetryFullScreen.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let model = FractalModel(defaults: defaults)
+        model.savedSettingGroups = [.fullScreen]
+        model.isFullScreen = true
+        let window = window()
+        window.visibleForTesting = true
+        let coordinator = FullScreenWindowObserver.Coordinator(model: model,
+            restoreDelay: .milliseconds(10), verificationDelay: .milliseconds(40))
+        coordinator.attach(to: window)
+        defer { coordinator.detach() }
+        let restored = expectation(description: "A rejected launch-time request is retried")
+        window.didToggle = {
+            if window.toggleCount == 1 {
+                // AppKit starts a transition but never completes it or enters full screen.
+                NotificationCenter.default.post(name: NSWindow.willEnterFullScreenNotification, object: window)
+                model.saveSettings()
+                XCTAssertTrue(FractalModel(defaults: defaults).isFullScreen)
+            } else {
+                window.fullScreenForTesting = true
+                NotificationCenter.default.post(name: NSWindow.didEnterFullScreenNotification, object: window)
+                restored.fulfill()
+            }
+        }
+        NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: window)
+        await fulfillment(of: [restored], timeout: 2)
+        XCTAssertEqual(window.toggleCount, 2)
+        XCTAssertTrue(model.isFullScreen)
+        XCTAssertTrue(FractalModel(defaults: defaults).isFullScreen)
+    }
+
+    @MainActor
+    func testRestorationAttemptsAreBoundedWhenNativeRequestsAreIgnored() async {
+        let model = FractalModel(defaults: nil)
+        model.isFullScreen = true
+        let window = window()
+        window.visibleForTesting = true
+        let coordinator = FullScreenWindowObserver.Coordinator(model: model,
+            restoreDelay: .milliseconds(10), verificationDelay: .milliseconds(20))
+        coordinator.attach(to: window)
+        defer { coordinator.detach() }
+        let attempts = expectation(description: "Bounded native requests")
+        attempts.expectedFulfillmentCount = 3
+        window.didToggle = { attempts.fulfill() }
+        NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: window)
+        await fulfillment(of: [attempts], timeout: 2)
+        let unexpected = expectation(description: "No fourth request")
+        unexpected.isInverted = true
+        window.didToggle = { unexpected.fulfill() }
+        NotificationCenter.default.post(name: NSWindow.didUpdateNotification, object: window)
+        await fulfillment(of: [unexpected], timeout: 0.1)
+        XCTAssertEqual(window.toggleCount, 3)
+        XCTAssertTrue(model.fullScreenStateForSaving, "Retain the saved target if restoration fails")
+    }
+
+    @MainActor
+    func testWindowUpdatesDoNotDuplicateAnInFlightRestoration() async {
+        let model = FractalModel(defaults: nil)
+        model.isFullScreen = true
+        let window = window()
+        window.visibleForTesting = true
+        let coordinator = FullScreenWindowObserver.Coordinator(model: model,
+            restoreDelay: .milliseconds(10), verificationDelay: .seconds(1))
+        coordinator.attach(to: window)
+        defer { coordinator.detach() }
+        let requested = expectation(description: "First restoration request")
+        window.didToggle = { requested.fulfill() }
+        NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: window)
+        await fulfillment(of: [requested], timeout: 2)
+        let duplicate = expectation(description: "Wait for verification before retrying")
+        duplicate.isInverted = true
+        window.didToggle = { duplicate.fulfill() }
+        for _ in 0..<5 {
+            NotificationCenter.default.post(name: NSWindow.didUpdateNotification, object: window)
+        }
+        await fulfillment(of: [duplicate], timeout: 0.1)
+        XCTAssertEqual(window.toggleCount, 1)
+    }
+
+    @MainActor
+    func testDetachingCancelsQueuedRestoration() async {
+        let model = FractalModel(defaults: nil)
+        model.isFullScreen = true
+        let window = window()
+        window.visibleForTesting = true
+        let coordinator = FullScreenWindowObserver.Coordinator(model: model, restoreDelay: .milliseconds(20))
+        coordinator.attach(to: window)
+        NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: window)
+        coordinator.detach()
+        let unexpected = expectation(description: "Detached window must not enter full screen")
+        unexpected.isInverted = true
+        window.didToggle = { unexpected.fulfill() }
+        await fulfillment(of: [unexpected], timeout: 0.1)
+        XCTAssertEqual(window.toggleCount, 0)
     }
 
     @MainActor

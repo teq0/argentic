@@ -10,6 +10,8 @@ It has the advantage that on systems with a supported GPU it uses Metal Shading 
 
 For a full guide to the controls and functionality, see [FEATURES.md](FEATURES.md), or open **Help → Argentic Help** in the macOS app (**Menu → Argentic Help** on iOS). In-app Help is bundled for offline use and supports searching topics and their contents.
 
+To clear Lyapunov rendering, choose **Render → Lyapunov → Clear** or **Clear Lyapunov Settings** in the Fractal panel. Clear is available only while Lyapunov is active; it restores the session's last ordinary formula/render choices and resets the Lyapunov options without changing coordinates, colours or output quality.
+
 ## Saving and reopening fractals
 
 PNG and JPEG exports embed Argentic's fractal settings in XMP metadata. Open the exported image to restore its settings and continue zooming, or press Draw to render it again. PNG is recommended for lossless images. Image editors and sharing services may strip metadata, so retain the original export.
@@ -44,7 +46,7 @@ The new formula is **56**, under **Formula → Classic**, and works on CPU and M
 
 Use **View → Image Display** (**Menu → View** on iOS), or the toolbar's **Fit Image to Window** toggle, to choose **Fit to Window** or **Actual Pixels (100%)**. macOS defaults to Actual Pixels so a low-resolution render is not automatically enlarged; iOS defaults to Fit to keep the whole picture visible.
 
-Actual Pixels maps one image pixel to one physical screen pixel, including on Retina displays, and provides native two-axis scrolling for oversized images. On iOS, swipe to pan in click/tap zoom mode; Rectangle mode reserves drags for selection. The status bar shows display magnification alongside rendered dimensions. Scaling and scrolling do not change the rendered resolution or fractal coordinates. Enable **Image Display** in Saved Settings to remember the mode.
+Actual Pixels maps one image pixel to one physical screen pixel, including on Retina displays, and provides native two-axis scrolling for oversized images. On iOS, swipe to pan in click/tap zoom mode; Rectangle mode reserves drags for selection. The status bar shows display magnification alongside rendered dimensions. Scaling and scrolling do not change the rendered resolution or fractal coordinates. **Image Display** in Saved Settings remembers the mode and is enabled by default on first run.
 
 ## Click zooming
 
@@ -56,7 +58,7 @@ For finer adjustments, use the toolbar's small zoom-out/in buttons and percentag
 
 ## Remembering app settings
 
-Open **Dialogs → Saved Settings…** (or **Argentic → Settings…**, ⌘, on macOS) to choose which groups to restore on the next launch: zoom controls, rendering backend, fractal/render, colours, image size/anti-aliasing, view coordinates, inspector, image display, and export format. Only zoom controls are remembered by default. Unchecked groups use built-in defaults next time; unchecking a group does not change the current session.
+Open **Dialogs → Saved Settings…** (or **Argentic → Settings…**, ⌘, on macOS) to choose which groups to restore on the next launch: zoom controls, rendering backend, fractal/render, colours, image size/anti-aliasing, view coordinates, inspector, image display, and export format. On first run, zoom controls, inspector, image display and export format are remembered by default; existing saved group selections are preserved. Unchecked groups use built-in defaults next time; unchecking a group does not change the current session.
 
 Selected settings are saved as they change and when the app closes or enters the background. Images and Back history are not restored; the app renders the restored parameters on launch. Save a PNG/JPEG with embedded settings or a parameter file to keep a particular fractal independently of app defaults.
 

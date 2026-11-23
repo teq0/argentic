@@ -108,19 +108,27 @@ private struct FractalPanel: View {
                 }
             }
             Section("Lyapunov (renders 30-32)") {
+                Toggle("Enable Lyapunov", isOn: Binding(
+                    get: { model.isLyapunovEnabled },
+                    set: { model.setLyapunovEnabled($0) }
+                ))
                 Picker("Map", selection: Binding(
-                    get: { model.parameters.formula > 100 ? model.parameters.formula - 100 : 0 },
-                    set: { if $0 > 0 { model.chooseLyapunovMap($0) } }
+                    get: { model.selectedLyapunovMap },
+                    set: { model.chooseLyapunovMap($0) }
                 )) {
-                    Text("—").tag(0)
                     ForEach(Catalog.lyapunovMaps) { Text("\($0.id).) \($0.title)").tag($0.id) }
                 }
+                .disabled(!model.isLyapunovEnabled)
                 Picker("Derivative", selection: $model.parameters.lyapunovDerivative) {
                     ForEach(Catalog.lyapunovDerivatives) { Text("\($0.id).) \($0.title)").tag($0.id) }
                 }
+                .disabled(!model.isLyapunovEnabled)
                 Picker("Mapping", selection: $model.parameters.lyapunovMapping) {
                     ForEach(Catalog.lyapunovMappings) { Text("\($0.id).) \($0.title)").tag($0.id) }
                 }
+                .disabled(!model.isLyapunovEnabled)
+                Button("Clear Lyapunov Settings") { model.clearLyapunovSettings() }
+                    .disabled(!model.isLyapunovEnabled)
             }
             Section("Julia") {
                 Toggle("Julia mode", isOn: $model.parameters.juliaMode)
