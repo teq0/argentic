@@ -1,0 +1,39 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Argentic: generate Xcode project",
+            "type": "shell",
+            "command": "mise run generate",
+            "options": { "cwd": "${workspaceFolder}" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Argentic: build macOS (Debug)",
+            "type": "shell",
+            "command": "mise run build",
+            "options": { "cwd": "${workspaceFolder}" },
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": {
+                "owner": "swift",
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^(?:\\[[^\\]]+\\]\\s+)?(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            }
+        },
+        {
+            "label": "Argentic: swift test (core)",
+            "type": "shell",
+            "command": "mise run test",
+            "options": { "cwd": "${workspaceFolder}" },
+            "group": { "kind": "test", "isDefault": true },
+            "problemMatcher": []
+        }
+    ]
+}

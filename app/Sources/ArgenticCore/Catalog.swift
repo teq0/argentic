@@ -1,0 +1,176 @@
+// Based on the Delphi form resources embedded in STERLING2.EXE (MDIChild menus).
+// Legacy IDs are preserved; corrected captions and Argentic's Classic formula are identified below.
+
+public struct CatalogEntry: Hashable, Sendable, Identifiable {
+    public let id: Int
+    public let title: String
+}
+
+public enum Catalog {
+    public static let formulas: [CatalogEntry] = [
+        CatalogEntry(id: 0, title: "Nova/Newton variation (sin/log/tan)"),
+        CatalogEntry(id: 1, title: "z=z*z+c, N-set"),
+        CatalogEntry(id: 2, title: "v->z = z-((z4-z3-z2-z-c*zsin-zsin)/(4*z3-3*z2-2*z-zcos))+c;"),
+        CatalogEntry(id: 3, title: "v->z = z - ((z4 - z3 - z2 - z*zsin - v->c)/(4*z3 - 3*z2 - 2*z -  z*zcos - v->c));"),
+        CatalogEntry(id: 4, title: "v->z = z - ((z5 + z4 - z3 * zsin + v->c)/(5*z4 + 4*z3 - 2*z2 * zcos + v->c));"),
+        CatalogEntry(id: 5, title: "twister weed"),
+        CatalogEntry(id: 6, title: "z = (c/cos(z))^2;"),
+        CatalogEntry(id: 7, title: "Ushiki Phoenix"),
+        CatalogEntry(id: 8, title: "4th order nova variation, sine_cosine"),
+        CatalogEntry(id: 9, title: "4th order nova variation, sine_cosine_fabs"),
+        CatalogEntry(id: 10, title: "z = z-(z3*zsin-1)/(3*z2*zcos)+v->c;"),
+        CatalogEntry(id: 11, title: "z = z-(z4-1)/(4*z3-z)+v->c;"),
+        CatalogEntry(id: 18, title: "Newton M-set variation (sin/exp/log)"),
+        CatalogEntry(id: 19, title: "z=z-(z*z*z+c*z*z+z+c-zsin)/(3*z*z+2*c*z-zcos);"),
+        CatalogEntry(id: 20, title: "z=z-(z1*z1 - z1*z*c - z - zsin)/(4*z*z1 - 3*z1*c - zcos);"),
+        CatalogEntry(id: 21, title: "z =z-(z*z1*c + z1 + z + c - zsin)/(3*z1*c + 2*z + 1+ctan_z() - zcos);"),
+        CatalogEntry(id: 22, title: "z  = z-(z1*z1*c + z1*z*c + z + c - zsin)/(4*z1*z*c + 3*z1*c + 1 - zcos);"),
+        CatalogEntry(id: 23, title: "z  = z-(z1*z1*c + z1*z + z + c - zsin)/(4*z1*z*c + 3*z1 - zcos);"),
+        CatalogEntry(id: 24, title: "z  = z - (z1*z + z1*c + c - zsin)/(3*z1 + 2*z*c - zcos);"),
+        CatalogEntry(id: 25, title: "z  = z-(z1*z1 + z1*z*c + c - zsin)/(4*z1*z + 3*z*z*c - zcos);"),
+        CatalogEntry(id: 26, title: "5th order Newton Mset - z  = z1-(z4*z1 + z4*c + c - zsin)/(5*z4 + 4*z2*z1*c - zcos);;"),
+        CatalogEntry(id: 27, title: "7th order Newton Mset - z  = z1-(z5*z2 + z5*z1*c + c - zsin)/(7*z5*z1 + 6*z5*c - zcos);"),
+        CatalogEntry(id: 28, title: "9th order Newton Mset - z  = z-(z5*z4 + z8*c + c - zsin)/(9*z8 + 8*z5*z2*c - zcos);"),
+        CatalogEntry(id: 29, title: "13th order Newton Mset - z = z-(z8*z4*z + z8*z4*c + c - zsin)/(13*z8*z4 + 12*z8*z2*z*c - zcos);"),
+        CatalogEntry(id: 30, title: "8th order Newton Mset - z = z - (z4*z4*z + z4*z4*c + c - zsin)/(9*z4*z4 + 8*z4*z3*c - zcos);"),
+        CatalogEntry(id: 31, title: "Newton Diamond - z = z - (z2*z2*z + z2*z2*c + z + c - zsin)/(5*z2*z2 + 4*z2*z*c + 1 - zcos);"),
+        CatalogEntry(id: 32, title: "Newton Pentagon - z=z-(z4*z2 + z4*z*c + z + c - zsin)/(6*z4*z + 5*z4*c - zcos);"),
+        CatalogEntry(id: 33, title: "Newton Hexagon - z = z - (z4*z2*z + z4*z2*c + z + c - zsin)/(7*z4*z2 + 6*z4*z*c + 1 - zcos);"),
+        CatalogEntry(id: 34, title: "Newton Octagon - z=z-(z4*z4*z + z4*z4*c + z + c - zsin)/(9*z4*z4 + 8*z4*z2*z*c + 1 - zcos);"),
+        CatalogEntry(id: 35, title: "13th order Newton Flower - z  = z - (z12*z + z12*c - z - zsin)/(13*z12 + 12*z4*z4*z2*z*c - zcos);"),
+        CatalogEntry(id: 36, title: "v->z = z-(z5-z3-z2*zsin-z-zsin)/(5*z3-z*z2-z2*zcos-1-zcos)+v->c;"),
+        CatalogEntry(id: 37, title: "v->z = z-(z5-z3-z2*zsin-z-zsin)/(4*z3-z*z3-z2*zcos-1-zcos)+v->c;"),
+        CatalogEntry(id: 38, title: "v->z = z-(z5-z4-z3*zsin-z-zsin)/(5*z5-4*z3-z3*zcos-1-zcos)+v->c;"),
+        CatalogEntry(id: 39, title: "v->z = z-(z3-z2-z*zsin)/(3*z2-2*z-z*zcos)+v->c;"),
+        CatalogEntry(id: 40, title: "v->z = z-(z3*zsin-z-zsin)/(3*z2*zcos-1-zcos)+v->c;"),
+        CatalogEntry(id: 41, title: "v->z = z-(z5-z4*zsin-zsin*z*c-z)/(5*z4-z4*zcos-zcos*z*c-1);"),
+        CatalogEntry(id: 42, title: "v->z = z-(z5*zsin-z4*zsin-zsin*z*c-z)/(5*z4*zcos-z4*zcos-zcos*z*c-1);"),
+        CatalogEntry(id: 43, title: "v->z = z-(z5*zsin-z4*zsin-zsin*z*c-z)/(5*z4*zcos-z4*zcos-zcos*z*c-1);"),
+        CatalogEntry(id: 44, title: "v->z = z-(z6-z5-z5*zsin-z4*zsin*c-zsin*z*c-z)/(6*z5-5*z4-z5*zcos-z4*zcos*c-zcos*z*c-1);"),
+        CatalogEntry(id: 45, title: "v->z = z-(z6-z5-z5*zsin-z4*zsin*c-z)/(6*z5-5*z4-z5*zcos-z4*zcos-1);"),
+        CatalogEntry(id: 46, title: "v->z = z-(z8-z6-z5-z5*zsin-z4*zsin*c-z)/(8*z7-6*z5-5*z4-z5*zcos-z4*zcos-1);"),
+        CatalogEntry(id: 47, title: "v->z = z-(z8-z6-z5*zsin-z5*zsin-z4*zsin-z-c)/(8*z7-6*z5-5*z4*zcos-z5*zcos-z4*zcos-1-c);"),
+        CatalogEntry(id: 48, title: "v->z = z-(z8-z6-z5*zsin-z4*zsin-z*c-1)/(8*z7-6*z5-z5*zcos-z4*zcos-c);"),
+        CatalogEntry(id: 49, title: "v->z = z-(zsin/(1e-15+zcos))*(z8-z6-zsin-z*c-1)/(8*z7-6*z5-zcos-c);"),
+        CatalogEntry(id: 50, title: "v->z = z-(z4-z3-z3-z2*zsin*c)/(4*z3-3*z2-z2*zcos*c);"),
+        CatalogEntry(id: 51, title: "v->z = z-(z4*zsin-z3*zsin-z3*zsin-z2*zsin*c)/(4*z3-3*z2-z2*zcos*c);"),
+        CatalogEntry(id: 52, title: "v->z = z-(z4*zsin-z3*zsin-z3*zsin-z2*zsin*c)/(4*z3*zcos-3*z2*zcos-z2*zcos*c);"),
+        CatalogEntry(id: 53, title: "v->z = z-(z3*zsin-z2*zsin*c-1)/(3*z2*zcos-2*z*zcos*c);"),
+        CatalogEntry(id: 54, title: "v->z = z-(z3*zsin-z2*zsin-c)/(4*z2*zcos-z*zcos);"),
+        CatalogEntry(id: 55, title: "v->z = z-(z3*zsin-z)/(4*z2*zcos-z*zcos*c);"),
+        CatalogEntry(id: classicMandelbrotFormulaID, title: "Classic Mandelbrot — z=z*z+c"),
+    ]
+
+    public static let renders: [CatalogEntry] = [
+        CatalogEntry(id: 1, title: "log(Iterations escape value)"),
+        CatalogEntry(id: 2, title: "orbit counting"),
+        CatalogEntry(id: 3, title: "orbit counting"),
+        CatalogEntry(id: 4, title: "orbit counting"),
+        CatalogEntry(id: 5, title: "orbit counting"),
+        CatalogEntry(id: 6, title: "standard deviation"),
+        CatalogEntry(id: 7, title: "min - max"),
+        CatalogEntry(id: 8, title: "fractal dimension"),
+        CatalogEntry(id: 9, title: "averaging"),
+        CatalogEntry(id: 10, title: "sin(x*x+y*y) (gaussian)"),
+        CatalogEntry(id: 11, title: "sin(x*x); sin(y*y) (gaussian)"),
+        CatalogEntry(id: 12, title: "sin(x); sin(y); sin(x+y); (gaussian)"),
+        CatalogEntry(id: 13, title: "sin(x*y; cos(x*y); sin(x); sin(y); (gaussian)"),
+        CatalogEntry(id: 14, title: "sine-trap 01"),
+        CatalogEntry(id: 15, title: "sine-trap 02"),
+        CatalogEntry(id: 16, title: "sine-trap 03"),
+        CatalogEntry(id: 17, title: "sine-trap 04"),
+        CatalogEntry(id: 18, title: "x/y; y/x; stalks"),
+        CatalogEntry(id: 19, title: "gaussian 2, max"),
+        CatalogEntry(id: 20, title: "gaussian 3, max"),
+        CatalogEntry(id: 21, title: "transform dimension"),
+        CatalogEntry(id: 22, title: "gaussian 5, max"),
+        CatalogEntry(id: 23, title: "gaussian 6, max"),
+        CatalogEntry(id: 24, title: "Triangle Inequality Variation [by: Damian Jones], (works best with formula #1)"),
+        CatalogEntry(id: 25, title: "log counting"),
+        CatalogEntry(id: 26, title: "sine dimension 8"),
+        CatalogEntry(id: 27, title: "gaussian sine dimension 9"),
+        CatalogEntry(id: 28, title: "sine dimension 10"),
+        CatalogEntry(id: 29, title: "sine dimension 11"),
+        CatalogEntry(id: 30, title: "Lyapunov"),
+        CatalogEntry(id: 31, title: "Lyapunov II"),
+        CatalogEntry(id: 32, title: "Lyapunov III"),
+    ]
+
+    public static let lyapunovMaps: [CatalogEntry] = [
+        CatalogEntry(id: 1, title: "P := K*P-K*P*P;"),
+        CatalogEntry(id: 2, title: "P := B*sin(P+K)*sin(P+K);"),
+        CatalogEntry(id: 3, title: "P := B*(K*P-K*P*P+0.25*B*P-B*2-P+2);"),
+        CatalogEntry(id: 4, title: "P := (K*P - sin(P));"),
+        CatalogEntry(id: 5, title: "P  := (K*P - sin(1-P));"),
+        CatalogEntry(id: 6, title: "P := (1-sin(P))*(1-(P*K*(1-P)));"),
+        CatalogEntry(id: 7, title: "P := B*(abs(P*P-K*K-sin(abs(K))/abs(P)));"),
+        CatalogEntry(id: 8, title: "P := K*(sin(K+P)*sin(K+P))*(1-P);"),
+        CatalogEntry(id: 9, title: "P := K*(P*sin(K*K))*(1-P);"),
+        CatalogEntry(id: 10, title: "P := K*(sin(K+P)*sin(K+P))*(1-P);"),
+        CatalogEntry(id: 11, title: "P := K*(P-cos(K))*(1-P);"),
+        CatalogEntry(id: 12, title: "P := sin(P+K)*sin(P+K);"),
+        CatalogEntry(id: 13, title: "P := 2*sin(P+K)*sin(P+K);"),
+        CatalogEntry(id: 14, title: "P := sin(P+K)*sin(P+K);"),
+        CatalogEntry(id: 15, title: "P := sin(P+K)*cos(P+K)*(1-p);"),
+        CatalogEntry(id: 16, title: "P := sin(P-K)*cos(P-K)*(1-p);"),
+        CatalogEntry(id: 17, title: "P := sin(P-K)*cos(P-K);"),
+        CatalogEntry(id: 18, title: "P := sin(P*K)*sin(P*K);"),
+        CatalogEntry(id: 19, title: "P := sin(1-K)*cos(P*K)*cos(P+K);"),
+        CatalogEntry(id: 20, title: "P := K*sin(P+K)*cos(P+K);"),
+    ]
+
+    public static let lyapunovDerivatives: [CatalogEntry] = [
+        CatalogEntry(id: 1, title: "LSum := (LSum * (K-2*K*P));"),
+        CatalogEntry(id: 2, title: "LSum := (LSum *(2*B*((sin(P+K)*cos(P+K)))));"),
+        CatalogEntry(id: 3, title: "LSum := (LSum * B*(P-2*K*P+0.25*B*P-B*2-P+2));"),
+        CatalogEntry(id: 4, title: "LSum := (LSum * B*(K - sin(P*P)));"),
+        CatalogEntry(id: 5, title: "LSum := (LSum * B*(K - sin(1-P*P)));"),
+        CatalogEntry(id: 6, title: "LSum := (LSum * B*(abs(sin(P))-abs(P)*abs(K*sin(P))));"),
+        CatalogEntry(id: 7, title: "LSum := (LSum *B*(abs(P*P-K*K-sin(abs(K))/abs(P))));"),
+        CatalogEntry(id: 8, title: "LSum := (LSum *B*(abs(P*P-K*K-cos(abs(K))/abs(sin(K*P)))));"),
+        CatalogEntry(id: 9, title: "LSum := (LSum * B*(K*(P*sin(K*K))*(1-P)));"),
+        CatalogEntry(id: 10, title: "LSum := (LSum * B*(K*(sin(K+P)*sin(K+P))*(1-P)));"),
+        CatalogEntry(id: 11, title: "LSum := (LSum * B*(K*(P-cos(K))*(1-P)));"),
+        CatalogEntry(id: 12, title: "LSum := (LSum * B*(sin(P+K)*sin(P+K)));"),
+        CatalogEntry(id: 13, title: "LSum := (LSum * B*(2*sin(P+K)*sin(P+K)));"),
+        CatalogEntry(id: 14, title: "LSum := (LSum * B*(sin(P+K)*sin(P+K)));"),
+        CatalogEntry(id: 15, title: "LSum := (LSum * B*(sin(P+K)*cos(P+K)*(1-p)));"),
+        CatalogEntry(id: 16, title: "LSum := (LSum * B*(sin(P-K)*cos(P-K)*(1-p)));"),
+        CatalogEntry(id: 17, title: "LSum := (LSum * B*(sin(P-K)*cos(P-K)));"),
+        CatalogEntry(id: 18, title: "LSum := (LSum * B*(sin(1-K)*cos(P*K)*cos(P+K)));"),
+        CatalogEntry(id: 19, title: "LSum := (LSum * B*(K*sin(P+K)*cos(P+K)));"),
+        CatalogEntry(id: 20, title: "LSum := (LSum * B*(sin(1-K)*cos(P*K)*cos(P+K)));"),
+        CatalogEntry(id: 21, title: "LSum := (LSum * B*(K*K + P - sin(1-P*P)));"),
+    ]
+
+    public static let lyapunovMappings: [CatalogEntry] = [
+        CatalogEntry(id: 1, title: "K = c;"),
+        CatalogEntry(id: 2, title: "K = abs(c)"),
+        CatalogEntry(id: 3, title: "K = length_c/abs(c); [figure 8]"),
+        CatalogEntry(id: 4, title: "K = length_c/(abs(1-sin(c)));"),
+        CatalogEntry(id: 5, title: "K = sin(c)/(cos(c);"),
+        CatalogEntry(id: 6, title: "K = abs(c)+sin(c*c);"),
+        CatalogEntry(id: 7, title: "K = length_c*atan(abs(cx/cy));"),
+        CatalogEntry(id: 8, title: "K = abs(cx+-cy);"),
+        CatalogEntry(id: 9, title: "K = abs(c)-sin(c*c);"),
+    ]
+
+    public static let transforms: [CatalogEntry] = [
+        CatalogEntry(id: 0, title: "None"),
+        CatalogEntry(id: 1, title: "sin()-cos()"),
+        CatalogEntry(id: 2, title: "sin()+cos()"),
+        CatalogEntry(id: 3, title: "arctan"),
+        CatalogEntry(id: 4, title: "sin()*cos()"),
+    ]
+
+    public static let formulaGroups: [(title: String, range: ClosedRange<Int>)] = [
+        ("Form'", 0...11),
+        ("Form''", 18...35),
+        ("Form'''", 36...55),
+        ("Classic", classicMandelbrotFormulaID...classicMandelbrotFormulaID),
+    ]
+    public static let renderGroups: [(title: String, range: ClosedRange<Int>)] = [("Rend'", 1...18), ("Rend''", 19...32)]
+    public static let blendGroups: [(title: String, range: ClosedRange<Int>)] = [("Color'", 1...13), ("Color''", 14...26)]
+    public static let rgbOrders = ["RGB", "RBG", "GBR", "GRB", "BRG", "BGR"]
+    public static let sizePresets: [(width: Int, height: Int)] = [(120, 80), (160, 120), (320, 240), (640, 480), (800, 600), (1024, 768), (1024, 1024), (1280, 960), (1600, 1200), (1960, 1440), (2048, 2048), (2400, 1800), (2560, 1920), (3200, 2400)]
+}

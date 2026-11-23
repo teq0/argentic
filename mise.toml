@@ -1,0 +1,31 @@
+[tasks.generate]
+description = "Generate the Xcode project from app/project.yml"
+run = "xcodegen generate --spec app/project.yml"
+
+[tasks.build]
+description = "Build the macOS app"
+depends = ["generate"]
+run = "xcodebuild -project app/Argentic.xcodeproj -scheme Argentic -configuration Debug -destination 'platform=macOS' -derivedDataPath app/.build/DerivedData build"
+
+[tasks.run]
+description = "Build and launch the macOS app"
+depends = ["build"]
+run = "open app/.build/DerivedData/Build/Products/Debug/Argentic.app"
+
+[tasks.test]
+description = "Run ArgenticCore package tests"
+run = "swift test --package-path app"
+
+[tasks.test-app]
+description = "Run macOS app tests"
+depends = ["generate"]
+run = "xcodebuild -project app/Argentic.xcodeproj -scheme Argentic -configuration Debug -destination 'platform=macOS' -derivedDataPath app/.build/DerivedData test"
+
+[tasks.clean]
+description = "Clean package and Xcode build outputs"
+depends = ["generate"]
+run = "swift package --package-path app clean && xcodebuild -project app/Argentic.xcodeproj -scheme Argentic -configuration Debug -destination 'platform=macOS' -derivedDataPath app/.build/DerivedData clean"
+
+[tasks.reset-defaults]
+description = "Reset app saved defaults"
+run = "defaults delete com.teq0.argentic"

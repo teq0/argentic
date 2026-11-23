@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+._*
+
+# Swift Package Manager (keep Package.resolved for reproducible builds)
+.build/
+.swiftpm/
+Packages/
+
+# Xcode build output and per-user settings
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+
+# Archives, debug symbols, and test results
+*.xcarchive
+*.ipa
+*.dSYM
+*.dSYM.zip
+*.xcresult
+
+# Dependency manager build output
+Carthage/Build/
+
+# Swift tooling caches
+.swiftlint_cache
+.swiftformat.cache

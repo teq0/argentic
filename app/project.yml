@@ -1,0 +1,66 @@
+name: Argentic
+options:
+  bundleIdPrefix: com.teq0
+  deploymentTarget:
+    macOS: "14.0"
+    iOS: "17.0"
+packages:
+  ArgenticCore:
+    path: .
+schemes:
+  Argentic:
+    build:
+      targets:
+        Argentic: all
+    test:
+      targets:
+        - ArgenticAppTests
+targets:
+  Argentic:
+    type: application
+    supportedDestinations: [macOS, iOS]
+    sources:
+      - path: Argentic
+      - path: ../FEATURES.md
+        buildPhase: resources
+      - path: ../examples
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: ArgenticCore
+    entitlements:
+      path: Argentic/Argentic.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-write: true
+    settings:
+      base:
+        SWIFT_VERSION: "5.0"
+        PRODUCT_BUNDLE_IDENTIFIER: com.teq0.argentic
+        PRODUCT_NAME: Argentic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: YES
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_KEY_CFBundleDisplayName: Argentic
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.graphics-design
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Automatic
+  ArgenticAppTests:
+    type: bundle.unit-test
+    supportedDestinations: [macOS, iOS]
+    sources:
+      - path: Tests/ArgenticAppTests
+    dependencies:
+      - target: Argentic
+    settings:
+      base:
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Automatic
+        "TEST_HOST[sdk=macosx*]": "$(BUILT_PRODUCTS_DIR)/Argentic.app/Contents/MacOS/Argentic"
