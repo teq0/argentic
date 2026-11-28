@@ -97,7 +97,7 @@ jobs:
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security import "$CERTIFICATE_PATH" -P "$MACOS_CERTIFICATE_PASSWORD" -t cert -f pkcs12 -k "$KEYCHAIN_PATH" -T /usr/bin/codesign
+          security import "$CERTIFICATE_PATH" -P "$MACOS_CERTIFICATE_PASSWORD" -f pkcs12 -k "$KEYCHAIN_PATH" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
           rm -f "$CERTIFICATE_PATH"
@@ -108,9 +108,21 @@ jobs:
           python3 - <<'PY'
           import os, pathlib, re
           identities = pathlib.Path(os.environ['RUNNER_TEMP'], 'argentic-identities.txt').read_text()
-          matches = re.findall(r'\b([A-Fa-f0-9]{40}) "Developer ID Application: [^"\n]+ \(' + re.escape(os.environ['APPLE_TEAM_ID']) + r'\)"', identities)
+          team_id = re.escape(os.environ['APPLE_TEAM_ID'])
+          matches = re.findall(
+              r'\b([A-Fa-f0-9]{40}) "Developer ID Application:[^"\n]*\(' + team_id + r'\)"',
+              identities,
+          )
           if len(matches) != 1:
-              raise SystemExit('Expected exactly one valid Developer ID Application certificate for APPLE_TEAM_ID.')
+              print('Valid Developer ID Application identities:')
+              print('\n'.join(
+                  line for line in identities.splitlines()
+                  if 'Developer ID Application:' in line
+              ))
+              raise SystemExit(
+                  f'Expected exactly one valid Developer ID Application certificate '
+                  f'for APPLE_TEAM_ID ({os.environ["APPLE_TEAM_ID"]}); found {len(matches)}.'
+              )
           with open(os.environ['GITHUB_ENV'], 'a') as env:
               env.write(f'MACOS_SIGNING_IDENTITY={matches[0]}\n')
           PY
