@@ -27,7 +27,7 @@ jobs:
   build:
     name: Test, sign and notarize Universal app
     runs-on: macos-15-intel
-    timeout-minutes: 75
+    timeout-minutes: 240
     outputs:
       tag: ${{ steps.version.outputs.tag }}
     env:
@@ -160,7 +160,7 @@ jobs:
           RESULT="$RUNNER_TEMP/argentic-notarization.json"
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$SUBMISSION"
           if ! xcrun notarytool submit "$SUBMISSION" --keychain-profile argentic-release \
-              --keychain "$KEYCHAIN_PATH" --wait --timeout 30m --output-format json > "$RESULT"; then
+              --keychain "$KEYCHAIN_PATH" --wait --timeout 180m --output-format json > "$RESULT"; then
             cat "$RESULT"
             SUBMISSION_ID="$(jq -r '.id // empty' "$RESULT")"
             if [[ -n "$SUBMISSION_ID" ]]; then
