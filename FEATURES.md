@@ -12,7 +12,7 @@ Argentic works with one image at a time. On macOS there is one main image window
 - Click or tap the picture to zoom in. To zoom out instead, choose **Zoom Out** in the toolbar zoom-mode menu's **Zoom In/Out** section.
 - Open **Controls** (the sliders icon) to show the Colour, Fractal and Size panels.
 - Choose a **Formula**, a **Render** method, and a **Colour** blend from the menus. Menu choices usually update the image immediately.
-- For text-field edits in the Fractal or Size panel, use that panel's **Apply** button. **Draw** also renders the current parameters again.
+- For text-field edits in the Fractal panel, use its **Apply** button. In the Size panel, enter a width and height in **Custom Size** and choose **Apply**.
 - Save as PNG to keep a lossless picture with embedded fractal settings, then open that picture to continue exploring.
 
 On macOS use the menu bar. On iOS the toolbar's **Menu** contains File, Edit, View, Examples, Image, Formula, Render, Colour, Dialogs and Help actions. Some toolbar controls may move into the system's overflow menu when space is limited.
@@ -25,6 +25,8 @@ Choose **View → Image Display** on macOS, or **Menu → View → Image Display
 - **Fit to Window** is the iOS default. The whole image is scaled to the available area while preserving its aspect ratio. This can enlarge a low-resolution image and make it look soft; it does not create additional image detail.
 
 The status bar shows output dimensions and display magnification. **Fit · 200%**, for example, means the existing pixels are being enlarged twofold for viewing, not that the image has been rendered at twice its resolution. For more actual detail, increase Width/Height in the Size panel and Apply.
+
+The Size panel keeps your last applied **Custom Size** when you select a preset, so you can return to it later. Enable **Image Size and Anti-Aliasing** in Saved Settings to restore both the current output size and the custom size on the next launch.
 
 Actual Pixels accounts for the screen's backing scale: on a 2× Retina screen, a 1600 × 1200 image occupies 800 × 600 interface points at 100%. Images smaller than the canvas are centred. Scroll bars/indicators appear as appropriate for the platform and its system settings when the image exceeds the visible area.
 
@@ -277,9 +279,9 @@ Images, Back history, rectangle selections and open export/import dialogs are no
 
 To stop restoring selected settings without deleting preferences, choose **Select None** in Saved Settings and **Save**, then quit and relaunch. The app will use the Example 1 startup parameters and default app controls. This retains the choice not to save any groups; it is not a complete first-run reset.
 
-For a complete reset of the macOS developer build, quit **all** Argentic instances before running `defaults delete "$HOME/Library/Preferences/com.teq0.argentic.plist"` in Terminal, then relaunch. Using the explicit file path avoids named-domain lookup failures. This removes all preferences in that file, including the save-group selection and window preferences. It does not delete exported pictures, parameter files or the bundled examples. Do not run the command while an instance is still running, as it can write its preferences back.
+For a complete reset of the macOS developer build, quit **all** Argentic instances before running `mise run reset-defaults`, then relaunch. The task launches a reset mode of the app so the sandboxed process can remove its own `com.teq0.argentic` preference domain, including the save-group selection, saved settings and window preferences. It also removes any legacy preference file outside the container. It does not delete exported pictures, parameter files or the bundled examples. Do not run the task while an instance is still running, as it can write its preferences back.
 
-Sandboxed builds may instead store preferences in `~/Library/Containers/com.teq0.argentic/Data/Library/Preferences/com.teq0.argentic.plist`; while the app is quit, the corresponding command is `defaults delete "$HOME/Library/Containers/com.teq0.argentic/Data/Library/Preferences/com.teq0.argentic.plist"`.
+Sandboxed builds store their active preferences in `~/Library/Containers/com.teq0.argentic/Data/Library/Preferences/com.teq0.argentic.plist`.
 
 ## Full screen and keyboard shortcuts
 

@@ -31,7 +31,7 @@ Without saved image-size settings, the first render is sized for the actual canv
 To clear all saved defaults for the macOS developer build, **quit all Argentic instances first**, then run:
 
 ```sh
-defaults delete "$HOME/Library/Preferences/com.teq0.argentic.plist"
+mise run reset-defaults
 ```
 
 Relaunch to use the new startup preset without saved overrides. This deletes Argentic's preferences, not exported images or parameter files. For sandboxed-build storage and a non-destructive alternative, see **Clearing saved defaults** in [FEATURES.md](FEATURES.md) or in-app Help.

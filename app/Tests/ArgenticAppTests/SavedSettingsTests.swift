@@ -83,6 +83,8 @@ final class SavedSettingsTests: XCTestCase {
             let model = FractalModel(defaults: defaults)
             model.savedSettingGroups = Set(SavedSettingGroup.allCases)
             model.parameters = customParameters
+            model.customImageWidth = 137
+            model.customImageHeight = 91
             model.zoomMode = .rectangle
             model.zoomOutOnClick = true
             model.clickZoomBehavior = .centerClickedPoint
@@ -99,6 +101,8 @@ final class SavedSettingsTests: XCTestCase {
             let restored = FractalModel(defaults: defaults)
             XCTAssertEqual(restored.savedSettingGroups, Set(SavedSettingGroup.allCases))
             XCTAssertEqual(restored.parameters, customParameters)
+            XCTAssertEqual(restored.customImageWidth, 137)
+            XCTAssertEqual(restored.customImageHeight, 91)
             XCTAssertEqual(restored.zoomMode, .rectangle)
             XCTAssertTrue(restored.zoomOutOnClick)
             XCTAssertEqual(restored.clickZoomBehavior, .centerClickedPoint)

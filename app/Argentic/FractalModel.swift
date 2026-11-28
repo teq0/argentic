@@ -120,6 +120,8 @@ final class FractalModel {
     var showingSavedSettings = false
     var showingHelp = false
     var savedSettingGroups: Set<SavedSettingGroup> = [.zoom, .inspector, .display, .export] { didSet { saveSettings() } }
+    var customImageWidth = ExampleCatalog.startupParameters.width
+    var customImageHeight = ExampleCatalog.startupParameters.height
     var showingImageExporter = false
     var imageFormat: ImageFormat = .png { didSet { saveSettings() } }
     var imageExportData = Data()
@@ -155,6 +157,10 @@ final class FractalModel {
         } else if savedSettingGroups.contains(.zoom) {
             clickZoomBehavior = defaults?.string(forKey: Self.clickZoomBehaviorKey)
                 .flatMap(ClickZoomBehavior.init(rawValue:)) ?? .defaultBehavior
+        }
+        if !savedSettingGroups.contains(.size) {
+            customImageWidth = parameters.width
+            customImageHeight = parameters.height
         }
         self.defaults = defaults
     }
@@ -202,9 +208,11 @@ final class FractalModel {
         if !restoredImageSize && outputUnchanged {
             let size = StartupSizing.imageSize(availableSize: availableSize, displayScale: displayScale,
                 aspectRatio: CGFloat(parameters.viewport.width / parameters.viewport.height))
+            customImageWidth = Int(size.width)
+            customImageHeight = Int(size.height)
             var p = parameters
-            p.width = Int(size.width)
-            p.height = Int(size.height)
+            p.width = customImageWidth
+            p.height = customImageHeight
             p.antiAlias = 1
             parameters = p
         }
@@ -460,6 +468,14 @@ final class FractalModel {
     }
 
     func setSize(width: Int, height: Int) {
+        customImageWidth = min(max(width, 16), 8192)
+        customImageHeight = min(max(height, 16), 8192)
+        parameters.width = customImageWidth
+        parameters.height = customImageHeight
+        draw()
+    }
+
+    func setPresetSize(width: Int, height: Int) {
         parameters.width = min(max(width, 16), 8192)
         parameters.height = min(max(height, 16), 8192)
         draw()

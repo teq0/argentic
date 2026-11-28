@@ -2,6 +2,7 @@ import ArgenticCore
 import SwiftUI
 #if os(macOS)
 import AppKit
+import Darwin
 #endif
 
 @main
@@ -13,6 +14,15 @@ struct ArgenticApp: App {
     #endif
 
     init() {
+        #if os(macOS)
+        if CommandLine.arguments.contains("--reset-defaults") {
+            if let bundleIdentifier = Bundle.main.bundleIdentifier {
+                UserDefaults.standard.removePersistentDomain(forName: bundleIdentifier)
+                UserDefaults.standard.synchronize()
+            }
+            exit(EXIT_SUCCESS)
+        }
+        #endif
         // A test host must not restore or overwrite the user's real app preferences.
         let testing = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
             || NSClassFromString("XCTestCase") != nil

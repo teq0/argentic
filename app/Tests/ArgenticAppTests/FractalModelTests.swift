@@ -25,6 +25,31 @@ final class FractalModelTests: XCTestCase {
         XCTAssertFalse(model.isRendering, "Render timed out")
     }
 
+    func testCustomImageSizeValidation() {
+        XCTAssertEqual(CustomImageSize.dimensions(width: "1234", height: "567")?.width, 1234)
+        XCTAssertEqual(CustomImageSize.dimensions(width: "1234", height: "567")?.height, 567)
+        XCTAssertNotNil(CustomImageSize.dimensions(width: " 16 ", height: "8192"))
+        XCTAssertNil(CustomImageSize.dimensions(width: "15", height: "100"))
+        XCTAssertNil(CustomImageSize.dimensions(width: "100", height: "8193"))
+        XCTAssertNil(CustomImageSize.dimensions(width: "", height: "100"))
+        XCTAssertNil(CustomImageSize.dimensions(width: "wide", height: "100"))
+    }
+
+    @MainActor
+    func testPresetKeepsLastCustomImageSize() async throws {
+        let model = FractalModel(defaults: nil)
+        model.parameters.maxIterations = 4
+        model.setSize(width: 137, height: 91)
+        try await waitForRender(model)
+        model.setPresetSize(width: 640, height: 480)
+        try await waitForRender(model)
+
+        XCTAssertEqual(model.parameters.width, 640)
+        XCTAssertEqual(model.parameters.height, 480)
+        XCTAssertEqual(model.customImageWidth, 137)
+        XCTAssertEqual(model.customImageHeight, 91)
+    }
+
     @MainActor
     func testLyapunovOffRestoresOrdinaryChoicesWithoutChangingOtherSettings() async throws {
         let model = try await renderedModel()

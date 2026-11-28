@@ -71,6 +71,8 @@ final class StartupSizingTests: XCTestCase {
         try await waitForRender(model)
         XCTAssertEqual(model.parameters.width, Int(expected.width))
         XCTAssertEqual(model.parameters.height, Int(expected.height))
+        XCTAssertEqual(model.customImageWidth, Int(expected.width))
+        XCTAssertEqual(model.customImageHeight, Int(expected.height))
         XCTAssertGreaterThan(model.parameters.width, 640)
     }
 
@@ -90,6 +92,8 @@ final class StartupSizingTests: XCTestCase {
         try await waitForRender(model)
         XCTAssertEqual(model.parameters.width, Int(expected.width))
         XCTAssertEqual(model.parameters.height, Int(expected.height))
+        XCTAssertEqual(model.customImageWidth, Int(expected.width))
+        XCTAssertEqual(model.customImageHeight, Int(expected.height))
         XCTAssertEqual(model.parameters.antiAlias, 1)
         XCTAssertEqual(model.parameters.viewport, originalView)
         let before = model.parameters

@@ -171,26 +171,72 @@ private struct FractalPanel: View {
 
 // MARK: Size
 
+enum CustomImageSize {
+    static let dimensionRange = 16...8192
+
+    static func dimensions(width: String, height: String) -> (width: Int, height: Int)? {
+        guard let width = parseDimension(width), let height = parseDimension(height) else { return nil }
+        return (width, height)
+    }
+
+    private static func parseDimension(_ text: String) -> Int? {
+        let value = Int(text.trimmingCharacters(in: .whitespacesAndNewlines))
+        guard let value, dimensionRange.contains(value) else { return nil }
+        return value
+    }
+}
+
 private struct SizePanel: View {
     @Bindable var model: FractalModel
+    @State private var customWidth: String
+    @State private var customHeight: String
+    @FocusState private var focusedDimension: Dimension?
+
+    private enum Dimension: Hashable {
+        case width, height
+    }
+
+    init(model: FractalModel) {
+        self.model = model
+        _customWidth = State(initialValue: String(model.customImageWidth))
+        _customHeight = State(initialValue: String(model.customImageHeight))
+    }
 
     var body: some View {
         Form {
             Section("Presets") {
                 ForEach(Array(Catalog.sizePresets.enumerated()), id: \.offset) { _, size in
                     Button("\(size.width) by \(size.height)") {
-                        model.parameters.width = size.width
-                        model.parameters.height = size.height
+                        selectPreset(width: size.width, height: size.height)
                     }
                 }
             }
-            Section("Size") {
+            Section("Custom Size") {
                 LabeledContent("Width") {
-                    TextField("", value: $model.parameters.width, format: .number).multilineTextAlignment(.trailing)
+                    TextField("Pixels", text: $customWidth)
+                        .focused($focusedDimension, equals: .width)
+                        .multilineTextAlignment(.trailing)
+                        #if os(iOS)
+                        .keyboardType(.numberPad)
+                        #endif
                 }
                 LabeledContent("Height") {
-                    TextField("", value: $model.parameters.height, format: .number).multilineTextAlignment(.trailing)
+                    TextField("Pixels", text: $customHeight)
+                        .focused($focusedDimension, equals: .height)
+                        .multilineTextAlignment(.trailing)
+                        #if os(iOS)
+                        .keyboardType(.numberPad)
+                        #endif
                 }
+                if CustomImageSize.dimensions(width: customWidth, height: customHeight) == nil {
+                    Text("Width and height must each be from 16 to 8192 pixels.")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+                Button("Apply Custom Size") { applyCustomSize() }
+                    .disabled(CustomImageSize.dimensions(width: customWidth, height: customHeight) == nil)
+            }
+            Section("Sampling") {
                 Picker("Anti-alias", selection: $model.parameters.antiAlias) {
                     Text("Off").tag(1)
                     Text("2:1").tag(2)
@@ -198,8 +244,19 @@ private struct SizePanel: View {
                     Text("4:1").tag(4)
                 }
             }
-            Button("Apply") { model.setSize(width: model.parameters.width, height: model.parameters.height) }
         }
         .formStyle(.grouped)
+    }
+
+    private func selectPreset(width: Int, height: Int) {
+        model.setPresetSize(width: width, height: height)
+    }
+
+    private func applyCustomSize() {
+        guard let size = CustomImageSize.dimensions(width: customWidth, height: customHeight) else { return }
+        focusedDimension = nil
+        model.setSize(width: size.width, height: size.height)
+        customWidth = String(size.width)
+        customHeight = String(size.height)
     }
 }

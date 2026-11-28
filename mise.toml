@@ -44,5 +44,6 @@ depends = ["generate"]
 run = "swift package --package-path app clean && xcodebuild -project app/Argentic.xcodeproj -scheme Argentic -configuration Debug -destination 'platform=macOS' -derivedDataPath app/.build/DerivedData clean"
 
 [tasks.reset-defaults]
-description = "Reset app saved defaults"
-run = "defaults delete com.teq0.argentic"
+description = "Reset app saved defaults (quit Argentic first)"
+depends = ["build"]
+run = "rm -f \"$HOME/Library/Preferences/com.teq0.argentic.plist\" && app/.build/DerivedData/Build/Products/Debug/Argentic.app/Contents/MacOS/Argentic --reset-defaults && sleep 1"

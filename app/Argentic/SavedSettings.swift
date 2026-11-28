@@ -39,7 +39,7 @@ enum SavedSettingGroup: String, CaseIterable, Identifiable, Codable {
         case .rendering: return "Use Metal GPU rendering or double-precision CPU rendering."
         case .fractal: return "Formula, render, iterations, Julia settings, transforms and mapping."
         case .colour: return "Blend, RGB order, render scale and colour mixing controls."
-        case .size: return "Width, height and anti-aliasing factor."
+        case .size: return "Width, height, last custom size and anti-aliasing factor."
         case .coordinates: return "Current complex-plane bounds and aspect fitting."
         }
     }
@@ -48,6 +48,8 @@ enum SavedSettingGroup: String, CaseIterable, Identifiable, Codable {
 /// Only opted-in values are copied into this snapshot; everything else stays at built-in defaults.
 struct SavedAppSettings: Codable {
     var parameters = ExampleCatalog.startupParameters
+    var customImageWidth = ExampleCatalog.startupParameters.width
+    var customImageHeight = ExampleCatalog.startupParameters.height
     var zoomMode = ZoomMode.click
     var zoomOutOnClick = false
     var clickZoomBehavior = ClickZoomBehavior.defaultBehavior
@@ -60,12 +62,14 @@ struct SavedAppSettings: Codable {
     var imageDisplayMode = ImageDisplayMode.platformDefault
 
     private enum CodingKeys: String, CodingKey {
-        case parameters, zoomMode, zoomOutOnClick, clickZoomBehavior, smallZoomStep, showInspector, inspectorTab, imageFormat, renderingBackend, isFullScreen, imageDisplayMode
+        case parameters, customImageWidth, customImageHeight, zoomMode, zoomOutOnClick, clickZoomBehavior, smallZoomStep, showInspector, inspectorTab, imageFormat, renderingBackend, isFullScreen, imageDisplayMode
     }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         parameters = try c.decodeIfPresent(FractalParameters.self, forKey: .parameters) ?? ExampleCatalog.startupParameters
+        customImageWidth = try c.decodeIfPresent(Int.self, forKey: .customImageWidth) ?? parameters.width
+        customImageHeight = try c.decodeIfPresent(Int.self, forKey: .customImageHeight) ?? parameters.height
         zoomMode = try c.decodeIfPresent(ZoomMode.self, forKey: .zoomMode) ?? .click
         zoomOutOnClick = try c.decodeIfPresent(Bool.self, forKey: .zoomOutOnClick) ?? false
         clickZoomBehavior = try c.decodeIfPresent(ClickZoomBehavior.self, forKey: .clickZoomBehavior) ?? .defaultBehavior
@@ -116,6 +120,10 @@ struct SavedAppSettings: Codable {
     @MainActor
     init(model: FractalModel, groups: Set<SavedSettingGroup>) {
         parameters = Self.filteredParameters(model.parameters, groups: groups)
+        if groups.contains(.size) {
+            customImageWidth = model.customImageWidth
+            customImageHeight = model.customImageHeight
+        }
         if groups.contains(.zoom) {
             zoomMode = model.zoomMode
             zoomOutOnClick = model.zoomOutOnClick
@@ -135,6 +143,10 @@ struct SavedAppSettings: Codable {
     @MainActor
     func restore(to model: FractalModel, groups: Set<SavedSettingGroup>) {
         model.parameters = Self.filteredParameters(parameters, groups: groups)
+        if groups.contains(.size) {
+            model.customImageWidth = customImageWidth
+            model.customImageHeight = customImageHeight
+        }
         if groups.contains(.zoom) {
             model.zoomMode = zoomMode
             model.zoomOutOnClick = zoomOutOnClick
