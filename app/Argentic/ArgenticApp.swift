@@ -49,6 +49,15 @@ struct FractalCommands: Commands {
     var model: FractalModel
 
     var body: some Commands {
+        PrimaryFractalCommands(model: model)
+        SecondaryFractalCommands(model: model)
+    }
+}
+
+struct PrimaryFractalCommands: Commands {
+    var model: FractalModel
+
+    var body: some Commands {
         CommandGroup(replacing: .appSettings) {
             Button("Settings…") { model.showingSavedSettings = true }
                 .keyboardShortcut(",")
@@ -58,6 +67,13 @@ struct FractalCommands: Commands {
         CommandGroup(replacing: .pasteboard) { EditMenuContent(model: model) }
         CommandGroup(replacing: .textEditing) {}
         CommandGroup(after: .toolbar) { ViewMenuContent(model: model) }
+    }
+}
+
+struct SecondaryFractalCommands: Commands {
+    var model: FractalModel
+
+    var body: some Commands {
         CommandGroup(replacing: .newItem) {
             FileMenuContent(model: model)
         }
