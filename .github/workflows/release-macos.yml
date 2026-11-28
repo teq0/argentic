@@ -225,12 +225,14 @@ jobs:
           RELEASE_TAG: ${{ needs.build.outputs.tag }}
         run: |
           set -euo pipefail
-          if gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft > "$RUNNER_TEMP/is-draft"; then
+          if gh release view "$RELEASE_TAG" --repo "$GH_REPO" --json isDraft --jq .isDraft > "$RUNNER_TEMP/is-draft" 2>/dev/null; then
             if [[ "$(cat "$RUNNER_TEMP/is-draft")" != true ]]; then
               echo '::error::Refusing to replace assets on a published release. Use a new version tag.'
               exit 1
             fi
+            echo "Using existing draft release $RELEASE_TAG"
           else
+            echo "Creating draft release $RELEASE_TAG"
             gh release create "$RELEASE_TAG" --verify-tag --draft \
               --title "Argentic $RELEASE_TAG" --generate-notes \
               --notes 'Universal macOS app for Apple Silicon (ARM64) and Intel (x86_64). Requires macOS 14 Sonoma or later. Signed with Developer ID and notarized by Apple. Unzip and drag Argentic.app to Applications. SHA256SUMS.txt contains the download checksum.'
