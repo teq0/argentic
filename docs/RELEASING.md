@@ -91,6 +91,17 @@ appropriate. Do not run this workflow against unreviewed code.
    This creates an annotated tag at `HEAD` and pushes it to `origin`. If the
    push fails, the local tag remains; push it again or remove it before retrying.
 
+   To remove a tag before publishing a release:
+
+   ```sh
+   mise run delete-tag -- v0.1.0
+   ```
+
+   This fetches the tag from `origin` if it is not already local, deletes it
+   remotely, then deletes it locally. The task refuses to delete a tag that has
+   an associated GitHub Release; deleting a tag does not delete a release or
+   its assets.
+
 3. Watch **Actions → Release macOS**. Tests run first. If the hosted VM has no
    Metal device, CI runs the CPU renderer/oracle, catalog and serialization tests
    instead of the GPU-dependent core and app rendering tests. Run the full

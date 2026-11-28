@@ -21,6 +21,10 @@ run = "bash app/Tools/build_macos_release.sh"
 description = "Create and push an annotated release tag (e.g. -- v0.1.0)"
 run = "bash app/Tools/tag_release.sh"
 
+[tasks.delete-tag]
+description = "Delete a release tag locally and from origin (e.g. -- v0.1.0)"
+run = "bash app/Tools/delete_tag.sh"
+
 [tasks.test]
 description = "Run ArgenticCore package tests"
 run = "swift test --package-path app"
