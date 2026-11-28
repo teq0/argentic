@@ -23,6 +23,11 @@ xcuserdata/
 *.dSYM.zip
 *.xcresult
 
+# Release packages and private signing keys
+/dist/
+*.p12
+*.p8
+
 # Dependency manager build output
 Carthage/Build/
 

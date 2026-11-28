@@ -1,0 +1,215 @@
+name: Release macOS
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build (vMAJOR.MINOR.PATCH)
+        required: true
+        default: v0.1.0
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-macos-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Test, sign and notarize Universal app
+    runs-on: macos-15-intel
+    timeout-minutes: 75
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      APP_PATH: app/.build/DerivedData-Release/Build/Products/Release/Argentic.app
+    steps:
+      - name: Validate release tag
+        id: version
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo '::error::Release tags must be vMAJOR.MINOR.PATCH, for example v0.1.0.'
+            exit 1
+          fi
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
+          echo "KEYCHAIN_PATH=$RUNNER_TEMP/argentic-signing.keychain-db" >> "$GITHUB_ENV"
+
+      - name: Check out the tagged source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: refs/tags/${{ steps.version.outputs.tag }}
+          persist-credentials: false
+
+      - name: Install build tools
+        run: |
+          brew install mise xcodegen
+          xcodebuild -version
+
+      - name: Test available backends
+        env:
+          MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}/mise.toml
+        run: |
+          # Hosted macOS VMs may not expose Metal. Do not mistake the lack of a GPU
+          # for a renderer failure; still run the independent CPU/oracle tests.
+          if xcrun swift -e 'import Metal; import Darwin; exit(MTLCreateSystemDefaultDevice() == nil ? 1 : 0)'; then
+            mise run test
+            mise run test-app
+          else
+            echo '::warning::Metal is unavailable on this runner. Running CPU renderer and catalog/serialization tests; GPU-dependent and app rendering tests require a physical Mac.'
+            mise run test -- --filter 'CPURendererTests|CatalogTests|MandelbrotTests/test(Catalog|ClassicGroup)'
+          fi
+
+      - name: Import Developer ID and notarization credentials
+        env:
+          MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in MACOS_CERTIFICATE_P12_BASE64 MACOS_CERTIFICATE_PASSWORD APPLE_TEAM_ID APPLE_ID APPLE_APP_SPECIFIC_PASSWORD; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing required repository secret: $name"
+              exit 1
+            fi
+          done
+          umask 077
+          CERTIFICATE_PATH="$RUNNER_TEMP/argentic-certificate.p12"
+          printf '%s' "$MACOS_CERTIFICATE_P12_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 32)"
+          echo "::add-mask::$KEYCHAIN_PASSWORD"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" -P "$MACOS_CERTIFICATE_PASSWORD" -t cert -f pkcs12 -k "$KEYCHAIN_PATH" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
+          rm -f "$CERTIFICATE_PATH"
+
+          # Select exactly one valid Developer ID Application identity for this team, not an
+          # Apple Development, Mac App Store, or Developer ID Installer certificate.
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH" > "$RUNNER_TEMP/argentic-identities.txt"
+          python3 - <<'PY'
+          import os, pathlib, re
+          identities = pathlib.Path(os.environ['RUNNER_TEMP'], 'argentic-identities.txt').read_text()
+          matches = re.findall(r'\b([A-Fa-f0-9]{40}) "Developer ID Application: [^"\n]+ \(' + re.escape(os.environ['APPLE_TEAM_ID']) + r'\)"', identities)
+          if len(matches) != 1:
+              raise SystemExit('Expected exactly one valid Developer ID Application certificate for APPLE_TEAM_ID.')
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              env.write(f'MACOS_SIGNING_IDENTITY={matches[0]}\n')
+          PY
+          xcrun notarytool store-credentials argentic-release \
+            --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" --keychain "$KEYCHAIN_PATH"
+
+      - name: Build signed Universal app
+        env:
+          MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}/mise.toml
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          ARGENTIC_BUILD_NUMBER: ${{ github.run_number }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          : "${MACOS_SIGNING_IDENTITY:?Developer ID identity was not imported}"
+          mise run build-release -- "$RELEASE_VERSION"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          codesign --display --verbose=4 "$APP_PATH"
+
+      - name: Notarize and staple
+        run: |
+          set -euo pipefail
+          SUBMISSION="$RUNNER_TEMP/Argentic-notarization.zip"
+          RESULT="$RUNNER_TEMP/argentic-notarization.json"
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$SUBMISSION"
+          if ! xcrun notarytool submit "$SUBMISSION" --keychain-profile argentic-release \
+              --keychain "$KEYCHAIN_PATH" --wait --timeout 30m --output-format json > "$RESULT"; then
+            cat "$RESULT"
+            SUBMISSION_ID="$(jq -r '.id // empty' "$RESULT")"
+            if [[ -n "$SUBMISSION_ID" ]]; then
+              xcrun notarytool log "$SUBMISSION_ID" --keychain-profile argentic-release \
+                --keychain "$KEYCHAIN_PATH" "$RUNNER_TEMP/argentic-notarization-log.json"
+              cat "$RUNNER_TEMP/argentic-notarization-log.json"
+            fi
+            exit 1
+          fi
+          cat "$RESULT"
+          jq -e '.status == "Accepted"' "$RESULT"
+          xcrun stapler staple "$APP_PATH"
+          xcrun stapler validate "$APP_PATH"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          spctl --assess --type execute --verbose=4 "$APP_PATH"
+
+      - name: Package notarized app
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          mkdir -p dist
+          # Repackage after stapling so the download includes Apple's notarization ticket.
+          ASSET="Argentic-${RELEASE_TAG}-macOS-universal.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "dist/$ASSET"
+          (cd dist && shasum -a 256 "$ASSET" > SHA256SUMS.txt)
+
+      - name: Upload release files
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: macOS-release
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Remove signing credentials
+        if: ${{ always() }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/argentic-signing.keychain-db"
+          if [[ -f "$KEYCHAIN_PATH" ]]; then
+            security delete-keychain "$KEYCHAIN_PATH"
+          fi
+          rm -f "$RUNNER_TEMP/argentic-certificate.p12"
+
+  draft-release:
+    name: Upload to draft GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download signed release files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: macOS-release
+          path: dist
+
+      - name: Create or update draft only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft > "$RUNNER_TEMP/is-draft"; then
+            if [[ "$(cat "$RUNNER_TEMP/is-draft")" != true ]]; then
+              echo '::error::Refusing to replace assets on a published release. Use a new version tag.'
+              exit 1
+            fi
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --draft \
+              --title "Argentic $RELEASE_TAG" --generate-notes \
+              --notes 'Universal macOS app for Apple Silicon (ARM64) and Intel (x86_64). Requires macOS 14 Sonoma or later. Signed with Developer ID and notarized by Apple. Unzip and drag Argentic.app to Applications. SHA256SUMS.txt contains the download checksum.'
+          fi
+          gh release upload "$RELEASE_TAG" dist/*.zip dist/SHA256SUMS.txt --clobber

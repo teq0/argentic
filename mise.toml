@@ -12,6 +12,15 @@ description = "Build and launch the macOS app"
 depends = ["build"]
 run = "open app/.build/DerivedData/Build/Products/Debug/Argentic.app"
 
+[tasks.build-release]
+description = "Build a Universal macOS Release app (pass a version, e.g. -- 0.1.0)"
+depends = ["generate"]
+run = "bash app/Tools/build_macos_release.sh"
+
+[tasks.tag-release]
+description = "Create and push an annotated release tag (e.g. -- v0.1.0)"
+run = "bash app/Tools/tag_release.sh"
+
 [tasks.test]
 description = "Run ArgenticCore package tests"
 run = "swift test --package-path app"

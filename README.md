@@ -72,6 +72,17 @@ To remember full screen, enable **Full-Screen State** in **Dialogs → Saved Set
 
 ## Development
 
+### macOS GitHub Releases
+
+The [Release macOS workflow](.github/workflows/release-macos.yml) builds a Universal
+app for Apple Silicon (ARM64) and Intel (x86_64), requiring macOS 14 Sonoma or
+later. Pushing a version tag such as `v0.1.0` signs and notarizes the app and
+uploads a ZIP plus SHA-256 checksum to a **draft GitHub Release** for review; it
+does not publish automatically. An Apple Developer Program membership and
+repository signing secrets are required. See [the release setup guide](docs/RELEASING.md).
+
+For an unsigned local Universal build, use `mise run build-release -- 0.1.0`.
+
 ### Requirements
 
 - macOS with the full **Xcode** installation and its command-line tools selected. `xcode-select -p` should point to your Xcode installation's `Contents/Developer` directory, not the standalone Command Line Tools directory.

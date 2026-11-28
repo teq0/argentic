@@ -40,7 +40,7 @@ targets:
         PRODUCT_NAME: Argentic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
-        MARKETING_VERSION: "0.1"
+        MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         INFOPLIST_KEY_CFBundleDisplayName: Argentic
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
