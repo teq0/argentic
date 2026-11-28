@@ -29,6 +29,10 @@ run = "bash app/Tools/delete_tag.sh"
 description = "Run ArgenticCore package tests"
 run = "swift test --package-path app"
 
+[tasks.test-ci]
+description = "Run a small CI-safe subset of ArgenticCore tests"
+run = "swift test --package-path app --filter 'CatalogTests|CPURendererTests/test(ShortOrbitsAgainstExistingDoublePrecisionOracle|CancellationDuringLongCPUOrbit|InvalidDimensionsAndExcessiveOrbitMemoryFailSafely)|MandelbrotTests/test(CatalogAndParameterFilesKeepLegacyZeroDistinctFromClassic|ClassicSupportsOrbitReadingRendersAndCancellation)'"
+
 [tasks.test-app]
 description = "Run macOS app tests"
 depends = ["generate"]

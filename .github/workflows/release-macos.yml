@@ -64,14 +64,14 @@ jobs:
         env:
           MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}/mise.toml
         run: |
-          # Hosted macOS VMs may not expose Metal. Do not mistake the lack of a GPU
-          # for a renderer failure; still run the independent CPU/oracle tests.
-          if xcrun swift -e 'import Metal; import Darwin; exit(MTLCreateSystemDefaultDevice() == nil ? 1 : 0)'; then
+          # Hosted Intel macOS runners may expose a Metal API but have no usable GPU.
+          # Only run the full suite on Apple Silicon with an available Metal device.
+          if [[ "$(uname -m)" == "arm64" ]] && xcrun swift -e 'import Metal; import Darwin; exit(MTLCreateSystemDefaultDevice() == nil ? 1 : 0)'; then
             mise run test
             mise run test-app
           else
-            echo '::warning::Metal is unavailable on this runner. Running CPU renderer and catalog/serialization tests; GPU-dependent and app rendering tests require a physical Mac.'
-            mise run test -- --filter 'CPURendererTests|CatalogTests|MandelbrotTests/test(Catalog|ClassicGroup)'
+            echo '::warning::A usable Metal GPU is unavailable on this runner. Running the CI-safe test subset; GPU-dependent and app rendering tests require a physical Mac.'
+            mise run test-ci
           fi
 
       - name: Import Developer ID and notarization credentials

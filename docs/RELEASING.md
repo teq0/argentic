@@ -102,9 +102,10 @@ appropriate. Do not run this workflow against unreviewed code.
    an associated GitHub Release; deleting a tag does not delete a release or
    its assets.
 
-3. Watch **Actions → Release macOS**. Tests run first. If the hosted VM has no
-   Metal device, CI runs the CPU renderer/oracle, catalog and serialization tests
-   instead of the GPU-dependent core and app rendering tests. Run the full
+3. Watch **Actions → Release macOS**. Tests run first. Hosted Intel runners run
+   a small CI-safe package-test subset instead of the long Oracle suite.
+   The full package and app suites run on Apple Silicon only when a Metal device
+   is available. Run the full
    `mise run test` and `mise run test-app` suites on a physical Mac before release.
    The interactive native Spaces test remains opt-in and is not run on CI.
 4. Open **Releases**, edit the generated **draft**, and download/test the ZIP.
