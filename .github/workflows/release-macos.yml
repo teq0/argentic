@@ -98,6 +98,17 @@ jobs:
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security import "$CERTIFICATE_PATH" -P "$MACOS_CERTIFICATE_PASSWORD" -f pkcs12 -k "$KEYCHAIN_PATH" -T /usr/bin/codesign
+          if [[ "$(openssl pkcs12 -in "$CERTIFICATE_PATH" -clcerts -nokeys -passin env:MACOS_CERTIFICATE_PASSWORD 2>/dev/null | grep -c 'BEGIN CERTIFICATE')" -ne 1 ]]; then
+            rm -f "$CERTIFICATE_PATH"
+            echo "::error::The P12 must contain exactly one client certificate and its private key."
+            exit 1
+          fi
+          CERTIFICATE_DETAILS="$(
+            openssl pkcs12 -in "$CERTIFICATE_PATH" -clcerts -nokeys -passin env:MACOS_CERTIFICATE_PASSWORD 2>/dev/null |
+            openssl x509 -noout -subject -issuer -serial -dates
+          )"
+          echo "Imported P12 certificate:"
+          echo "$CERTIFICATE_DETAILS"
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH" "$HOME/Library/Keychains/login.keychain-db"
           rm -f "$CERTIFICATE_PATH"
